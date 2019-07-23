@@ -75,37 +75,9 @@ function setup() {
         particle.push(new Particle(data.x,data.y,data.velX,data.velY));
     }
   });
-  
-  socket.on('projektil', function(data) {
-     //check if the amount of projectiles changed | true: amount has changed
-     var update = false;
-     if(data.length != projectile.length){
-        projectile = []; 
-        update = true;
-     }
-     
-     for(var i = 0; i < data.length; i++){
-        if(update){ //add new projectile to array
-          if(data[i].id == socket.id)
-            projectile.push(new Projectile(data[i].x, data[i].y, data[i].size, true)); 
-          else
-            projectile.push(new Projectile(data[i].x, data[i].y, data[i].size, false)); 
-        }else{ //update pos of projectile
-          projectile[i].setPosition(data[i].x,data[i].y);
-        }
-     }
-  });
-  
-  socket.on('asteroids', function(data) {
-    //check if the amount of asteroids changed | true: amount has changed
-    asteroid = [];
-    
-    for(var i = 0; i < data.length; i++){
-      asteroid.push(new Asteroid(data[i].x, data[i].y, data[i].size, data[i].points)); 
-    }
- });
 
   socket.on('heartbeat', function(data) {
+   //Update Ships
    //check if the amount of ships changed
    if(ships_count != ships.length){
      ships = [];
@@ -113,28 +85,56 @@ function setup() {
    ships_count = 0;
   
     document.getElementById("js_leaderboard").innerHTML = ""; //clear leaderboard below canvas
-    for(var i = 0; i < data.length; i++){
+    for(var i = 0; i < data.ship.length; i++){
       
-      if(socket.id != data[i].id){ //don't process own ship
+      if(socket.id != data.ship[i].id){ //don't process own ship
         ships_count++;
-        var ship_ = getShipByID(data[i].id);
+        var ship_ = getShipByID(data.ship[i].id);
         if(ship_ == null){ //add new ship to array
-           ships.push(new Ship(data[i].id,data[i].color.r,data[i].color.g,data[i].color.b));
+           ships.push(new Ship(data.ship[i].id,data.ship[i].color.r,data.ship[i].color.g,data.ship[i].color.b));
          }else{ //update pos of ship
-           ship_.setPosition(data[i].x,data[i].y,data[i].angle,data[i].spawn_protection,data[i].thrustActive);
+           ship_.setPosition(data.ship[i].x,data.ship[i].y,data.ship[i].angle,data.ship[i].spawn_protection,data.ship[i].thrustActive);
          }
       }else{
-         score = data[i].score; //set own score 
-         lives = data[i].lives; //set own lives
-         ship.spawn_protection = data[i].spawn_protection;
+         score = data.ship[i].score; //set own score 
+         lives = data.ship[i].lives; //set own lives
+         ship.spawn_protection = data.ship[i].spawn_protection;
          //set max lives once
          if(LIVES == null){
            LIVES = lives;
          }
       }
       //update leaderboard below canvas
-      document.getElementById("js_leaderboard").innerHTML += "<span style='color: rgb("+ data[i].color.r +","+ data[i].color.g +","+ data[i].color.b +")'>█</span> "+ data[i].score + " ";
+      document.getElementById("js_leaderboard").innerHTML += "<span style='color: rgb("+ data.ship[i].color.r +","+ data.ship[i].color.g +","+ data.ship[i].color.b +")'>█</span> "+ data.ship[i].score + " ";
     } 
+
+    //------------------------------------------------------------
+    //Update asteroids
+    asteroid = [];
+    
+    for(var i = 0; i < data.asteroids.length; i++){
+      asteroid.push(new Asteroid(data.asteroids[i].x, data.asteroids[i].y, data.asteroids[i].size, data.asteroids[i].points)); 
+    }
+
+    //------------------------------------------------------------
+    //Update projectiles
+    //check if the amount of projectiles changed | true: amount has changed
+     var update = false;
+     if(data.projectile.length != projectile.length){
+        projectile = []; 
+        update = true;
+     }
+     
+     for(var i = 0; i < data.projectile.length; i++){
+        if(update){ //add new projectile to array
+          if(data.projectile[i].id == socket.id)
+            projectile.push(new Projectile(data.projectile[i].x, data.projectile[i].y, data.projectile[i].size, true)); 
+          else
+            projectile.push(new Projectile(data.projectile[i].x, data.projectile[i].y, data.projectile[i].size, false)); 
+        }else{ //update pos of projectile
+          projectile[i].setPosition(data.projectile[i].x,data.projectile[i].y);
+        }
+     }
   });
   
   //draw canvas in div box
